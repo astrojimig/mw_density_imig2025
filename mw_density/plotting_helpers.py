@@ -2,7 +2,7 @@
 plotting_helpers.py
 Helper functions for plotting and making figures
 
-Reference: J. Imig et al. 2024
+Reference: J. Imig et al. 2025
 """
 
 import matplotlib.pyplot as plt
@@ -14,6 +14,7 @@ import matplotlib.patches as patches
 import numpy as np
 from mw_density.sample_selection import setup_maap_bins
 from typing import Any, Callable
+from numpy.typing import NDArray
 
 age_bins, mh_bins = setup_maap_bins()
 
@@ -206,7 +207,7 @@ def plot_sun_and_GC(
 
 
 def plot_model_from_params(
-    model: Callable, params: Any, savename: Any = None
+    model: Callable, params: NDArray, savename: str = None
 ) -> None:
     r_coords = np.arange(-20, 20, 0.1)
     z_coords = np.arange(-20, 20, 0.1)
@@ -227,7 +228,7 @@ def plot_model_from_params(
 
     # Full Pic
     cim = ax0.imshow(
-        np.log10(massdens), extent=(-20, 20, -20, 20), origin="lower left"
+        np.log10(massdens), extent=(-20, 20, -20, 20), origin="lower"
     )
     plt.colorbar(cim, ax=ax0, label=r"log($\nu_{*}$)")
     ax0.set_xlabel("r (kpc)")
@@ -246,18 +247,14 @@ def plot_model_from_params(
         r = np.sqrt((x**2) + (z_coords**2))
         r2d[ix] += np.interp(r, r_coords, rprofile)
 
-    ax_R2D.imshow(
-        np.log10(r2d.T), extent=(-20, 20, -20, 20), origin="lower left"
-    )
+    ax_R2D.imshow(np.log10(r2d.T), extent=(-20, 20, -20, 20), origin="lower")
     ax_R2D.set_title("Radial Profile", fontsize=36)
     ax_R2D.set_xlabel("x (kpc)")
     ax_R2D.set_ylabel("y (kpc)")
 
     # Z profile 2D
     z2d = massdens
-    ax_Z2D.imshow(
-        np.log10(z2d), extent=(-20, 20, -20, 20), origin="lower left"
-    )
+    ax_Z2D.imshow(np.log10(z2d), extent=(-20, 20, -20, 20), origin="lower")
     ax_Z2D.set_title("Vertical Profile", fontsize=36)
     ax_Z2D.set_xlabel("x (kpc)")
     ax_Z2D.set_ylabel("z (kpc)")
@@ -307,10 +304,14 @@ def plot_model_from_params(
         plt.savefig(savename, bbox_inches="tight")
 
     plt.show()
-    return
 
 
-def mass_at_loc2D(model, params, r_points, z_points):
+def mass_at_loc2D(
+    model: Callable,
+    params: NDArray,
+    r_points: NDArray,
+    z_points: NDArray,
+) -> NDArray:
     """Combined profile exponential for MW modeling.
     Inputs:
         r: array: array of radii values to evaluate at (kpc)
@@ -333,7 +334,7 @@ def mass_at_loc2D(model, params, r_points, z_points):
 
 
 # And some plotting helper functions...
-def bin_count_plot(lowalph, highalph, savename=None):
+def bin_count_plot(lowalph, highalph, savename=None) -> None:
     plt.figure(figsize=(20, 10))
     plt.subplot(121)
     plt.title(
@@ -344,7 +345,7 @@ def bin_count_plot(lowalph, highalph, savename=None):
     plt.imshow(
         ncount_distmass_LOW.T,
         aspect=10,
-        origin="lower left",
+        origin="lower",
         extent=[
             age_bins["min"][0],
             age_bins["max"][-1],
@@ -392,7 +393,7 @@ def bin_count_plot(lowalph, highalph, savename=None):
     plt.imshow(
         ncount_distmass_HIGH.T,
         aspect=10,
-        origin="lower left",
+        origin="lower",
         extent=[
             age_bins["min"][0],
             age_bins["max"][-1],
@@ -435,7 +436,6 @@ def bin_count_plot(lowalph, highalph, savename=None):
     if savename != None:
         plt.savefig(savename, bbox_inches="tight")
     plt.show()
-    return
 
 
 # And some plotting helper functions...
@@ -1124,7 +1124,7 @@ def plot_model_from_params_EX(
     return
 
 
-def plot_spiral_arms(ax):
+def plot_spiral_arms(ax, rotate):
     # SPIRAL ARMS
     # https://iopscience.iop.org/article/10.3847/1538-4357/ab4a11/pdf
     perseus = [-23, 115, 40, 8.87, 10.3, 8.7, "green", "Perseus", 2, 5.25]
@@ -1174,7 +1174,7 @@ def plot_spiral_arms(ax):
 
 
 def setup_bin_axes():
-    plt.figure(figsize=(30, 17))
+    plt.figure(figsize=(25, 17))
     ax1c = plt.subplot2grid((6, 2), (0, 0), colspan=2)  # cax
     ax1a = plt.subplot2grid((6, 2), (1, 0), rowspan=5)  # high alph
     ax1b = plt.subplot2grid((6, 2), (1, 1), rowspan=5)  # low alph
@@ -1206,6 +1206,7 @@ def setup_bin_axes():
 
         for i in range(len(age_bins["center"])):
             ax.axvline(i - 0.5, c="lightgray")
+        for i in range(len(mh_bins["center"])):
             ax.axhline(i - 0.5, c="lightgray")
 
     return ax1a, ax1b, ax1c

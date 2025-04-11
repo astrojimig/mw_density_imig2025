@@ -68,10 +68,10 @@ def get_distmass_filepath() -> str:
 # ========================
 
 # type alias for maap array
-bin_definition = dict[str, NDArray]
+bin_type = dict[str, NDArray]
 
 
-def setup_maap_bins() -> tuple[bin_definition, bin_definition]:
+def setup_maap_bins() -> tuple[bin_type, bin_type]:
     """
     Define limits for MAAP bins
     """
@@ -535,24 +535,34 @@ def write_file_header(save_filename: str) -> None:
     """
     Populates the file header with various metadata
     """
-    hdul = fits.open(f"{save_filename}", mode="update")
-    hdr = hdul[0].header
-    hdr["DATE"] = (f"{datetime.datetime.utcnow()}", "Time of File Creation")
-    hdr["AUTHOR"] = ("Julie Imig (STScI)", "Primary Author")
-    hdr["REFERENC"] = ("Imig et al. 2024", "Primary Reference")
-    hdr["DESCRIP"] = (
-        "APOGEE RGB sample data used in Imig et al 2024",
-        "short file description",
-    )
-    hdr["ALLSTAR"] = (
-        f"{get_allstar_filepath().split('/')[-1]}",
-        "allStar file version used",
-    )
-    hdr["DISTMASS"] = (
-        f"{get_distmass_filepath().split('/')[-1]}",
-        "distmass file version used",
-    )
-    hdul.flush()  # changes are written back to original file
+    with fits.open(f"{save_filename}", mode="update") as hdul:
+        hdr = hdul[0].header
+        hdr["DATE"] = (
+            f"{datetime.datetime.now().__str__()}",
+            "Time of File Creation",
+        )
+        hdr["AUTHOR"] = ("Julie Imig (STScI)", "Primary Author")
+        hdr["REFERENC"] = ("Imig et al. 2025", "Primary Reference")
+        if "apogee_sample" in save_filename:
+            hdr["DESCRIP"] = (
+                "APOGEE RGB sample data used in Imig et al 2024",
+                "description",
+            )
+        elif "density_params" in save_filename:
+            hdr["DESCRIP"] = (
+                "Milky Way Density Measurements from Imig et al 2024",
+                "description",
+            )
+
+        hdr["ALLSTAR"] = (
+            f"{get_allstar_filepath().split('/')[-1]}",
+            "allStar file version used",
+        )
+        hdr["DISTMASS"] = (
+            f"{get_distmass_filepath().split('/')[-1]}",
+            "distmass file version used",
+        )
+        hdul.flush()  # changes are written back to original file
 
 
 if __name__ == "__main__":

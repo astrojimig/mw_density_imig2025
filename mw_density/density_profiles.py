@@ -2,7 +2,7 @@
 density_profiles.py
 Density Profiles and equations for the MW
 
-Reference: J. Imig et al. 2024
+Reference: J. Imig et al. 2025
 """
 
 import numpy as np
@@ -359,12 +359,8 @@ def z_indep_profile(
     Z independent version of combined_exp_profile_nonsmoothed_linear
     for testing purposes
     """
-    if len(params) == 5:
-        hri, hro, hz0, rp, rf = params
-        norm = 1.0
-    else:
-        hri, hro, hz0, rp, rf, norm = params
-        norm = 10.0**norm
+    hri, hro, hz0, rp, rf, norm = params
+    norm = 10.0**norm
 
     # Normalization
     r0 = r_sun

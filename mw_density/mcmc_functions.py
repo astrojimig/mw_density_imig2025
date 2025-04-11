@@ -3,13 +3,14 @@ mcmc_functions.py
 Helper functions for performing the MCMC fitting of
 the structural parameters of the Milky Way
 
-Reference: J. Imig et al. 2024
+Reference: J. Imig et al. 2025
 """
 
 import emcee
 import numpy as np
 from mw_density.density_profiles import combined_exp_profile_nonsmoothed_linear
 from mw_density.sample_selection import setup_maap_bins
+from mw_density.selection_function import resample_effsel
 from multiprocessing import Pool
 from numpy.typing import NDArray
 from typing import Any, Callable, Union
@@ -26,11 +27,11 @@ def set_param_limits() -> NDArray:
             [-5.0, 5.0],  # limits for h_in
             [0.0, 5.0],  # limits for h_out
             [0.0, 2.5],  # limits for h_z
-            [0.0, 30.0],  # limits for r_peak
+            [0.0, 20],  # limits for r_peak
             [0.0, 0.1],  # limits for a_flare
-            [-10.0, 10.0],
+            # [0, 15.0],  # limits for nu_0
         ]
-    )  # limits for nu_0
+    )
     return param_lims
 
 
@@ -71,10 +72,10 @@ def random_starting_guess(nwalkers: int) -> NDArray:
         rf = np.random.choice(
             np.linspace(param_lims[4][0], param_lims[4][1], 100)
         )
-        norm = np.random.choice(
-            np.linspace(param_lims[5][0], param_lims[5][1], 100)
-        )
-        p0.append([h, h2, hz, rp, rf, norm])
+        # norm = np.random.choice(
+        #    np.linspace(param_lims[5][0], param_lims[5][1], 100)
+        # )
+        p0.append([h, h2, hz, rp, rf])  # , norm])
     return np.array(p0)
 
 
@@ -90,9 +91,10 @@ def check_bounds(theta: NDArray, r_sun: float = 8.122) -> bool:
         if (theta[i] < param_lims[i][0]) | (theta[i] > param_lims[i][1]):
             prior = False
 
-    # extra prior for A_flare - h_z is not allowed to be negative.
-    # todo: make theta a dictionary or something!!
-    _, _, h_z0, _, a_flare, _ = theta
+    # extra prior for A_flare - h_z is not allowed to be negative anywhere
+    # in galaxy.
+    # _, _, h_z0, _, a_flare, _ = theta
+    _, _, h_z0, _, a_flare = theta
     if (h_z0 + a_flare * (0 - r_sun)) <= 0:
         prior = False
 
@@ -107,6 +109,7 @@ def log_probability(
     effsel_dat: NDArray,
     r_effsel: NDArray,
     z_effsel: NDArray,
+    survey_volume: NDArray,
 ) -> float:
     """
     Calculates the log likelihood that a given density model fits the data,
@@ -125,29 +128,41 @@ def log_probability(
     Outputs:
         log_likelihood: quanitity to minimize in MCMC
     """
+    # Priors = make sure parameters are within the search boundaries
     if not check_bounds(theta):
-        return -np.inf  # Parameters are out of bounds
+        return -np.inf
 
-    log_dens = np.log(densmodel(theta, r_data, z_data))
+    # Model evaluated at data
+    dens_data = densmodel(theta, r_data, z_data)
+    log_dens = np.log(dens_data)
 
-    # expected number of stars in the survey given the model
-    # (if density at sun is 1 pc-3):
-    model_effsel = densmodel(theta, r_effsel, z_effsel)
-    effective_volume = np.log(np.nansum(model_effsel * effsel_dat))
+    # Model evaluated at effsel
+    dens_effsel = densmodel(theta, r_effsel, z_effsel)
+    dens_effsel_sum = np.nansum(dens_effsel * effsel_dat)
+    effective_volume = np.log(dens_effsel_sum)
+
+    # check if both of these are non-zero and finite
     if np.nansum(log_dens) == 0.0 or effective_volume == 0.0:
         return -np.inf
 
     if np.isfinite(np.nansum(log_dens)) & np.isfinite(effective_volume):
-        # original version - no amplitude included
+        # original likelihood - no amplitude included
         log_likelihood = np.nansum(
             log_dens - np.ones(len(log_dens)) * effective_volume
         )
         # add amplitude
-        # norm = 10.0**theta[-1]
-        # log_likelihood = log_likelihood -
-        # # continuednp.log(norm*np.nansum(model_effsel*effsel_dat))
-        # add amplitude
-        log_likelihood = log_likelihood - (1 + theta[-1]) * effective_volume
+        # log_likelihood = log_likelihood - (1 + theta[-1]) * effective_volume
+        # Add an additional factor for the amplitude...
+        # # Aiming to match the star count number len(r_data)
+        # dens_effsel_counts = (dens_effsel/len(r_effsel)) * survey_volume
+        # actual_counts = len(r_data)
+        # predicted_counts = np.nansum(dens_effsel_counts)
+        # # minimize the difference between actual and predicted
+        # log_likelihood_starcounts = np.log(
+        #     1.0 / (np.abs(actual_counts - predicted_counts))
+        # )
+
+        # log_likelihood = log_likelihood + log_likelihood_starcounts
 
         if np.isnan(log_likelihood):
             return -np.inf
@@ -195,7 +210,7 @@ def perform_maap_density_fit(
     alpha_bin_val: str,
     fname: str,
     nthreads: Union[None, int] = None,
-) -> NDArray:
+) -> Any:
     """
     Function to perform the MCMC density fit for a give MAAP bin.
 
@@ -235,8 +250,8 @@ def perform_maap_density_fit(
 
     # Log some info
     maap_str = f"N = {n_stars} stars\n"
-    maap_str += f"[M/H] = {round(mh_bins['center'][metal_bin_i],2)}, "
-    maap_str += f"age = {round(age_bins['center'][age_bin_i],2)}, "
+    maap_str += f"[M/H] = {round(mh_bins['center'][metal_bin_i], 2)}, "
+    maap_str += f"age = {round(age_bins['center'][age_bin_i], 2)}, "
     maap_str += f"alpha = {alpha_bin_val}"
     print(maap_str)
     print("=" * 50)
@@ -245,15 +260,21 @@ def perform_maap_density_fit(
         print(
             f"n_stars = {n_stars} is less than minimum of 100. Skipping bin."
         )
+        return None
     else:
+        # Set up data for Sample:
+        bin_r_data = apogee_sample["GALACTIC_R"][data_binmask]
+        bin_z_data = apogee_sample["GALACTIC_Z"][data_binmask]
+
         # Set up Selection Function for sample
         bin_effsel_rs = effsel_dict["bin_effsel_rs"]
         bin_effsel_zs = effsel_dict["bin_effsel_zs"]
         bin_effsel = effsel_dict["bin_effsel"]
-
-        # Set up data for Sample:
-        bin_r_data = apogee_sample["GALACTIC_R"][data_binmask]
-        bin_z_data = apogee_sample["GALACTIC_Z"][data_binmask]
+        survey_volume = effsel_dict["eff_volume"]
+        # Resample Effsel to data coords to prevent volume issue
+        # bin_effsel = resample_effsel(effsel_dict, bin_r_data, bin_z_data)
+        # bin_effsel_rs = np.copy(bin_r_data)
+        # bin_effsel_zs = np.copy(bin_z_data)
 
         # arguments for lnprob
         lnprob_args = [
@@ -263,6 +284,7 @@ def perform_maap_density_fit(
             bin_effsel,
             bin_effsel_rs,
             bin_effsel_zs,
+            survey_volume,
         ]
 
         if nthreads:
@@ -296,5 +318,14 @@ def perform_maap_density_fit(
         best_fit_params = sampler.flatchain[
             np.argmax(sampler.flatlnprobability)
         ]
-        print(best_fit_params)
+
+        param_string = "BEST FIT RESULTS: \n"
+        param_string += f"\t hr_in = {round(1.0 / best_fit_params[0], 2)}\n"
+        param_string += f"\t hr_out = {round(1.0 / best_fit_params[1], 2)}\n"
+        param_string += f"\t r_peak = {round(best_fit_params[3], 2)}\n"
+        param_string += f"\t h_z0 = {round(best_fit_params[2], 3)}\n"
+        param_string += f"\t A_flare = {round(best_fit_params[4], 3)}\n"
+        # param_string += f"\t nu_0 = {round(best_fit_params[5], 2)}\n"
+
+        print(param_string)
         return best_fit_params
