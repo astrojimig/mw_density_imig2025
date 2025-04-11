@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mw_density"
+description = "Code for reproducing Milky Way Density measurements from Imig et al. 2025"
+dynamic = ["version"]
+license = {text = "CCBy4.0"}
+authors = [{name = "Julie Imig", email = "jimig@stsci.edu"}]
+dependencies = [
+    "astropy==6.1.1",
+    "matplotlib==3.9.1",
+    "numpy==2.0.0",
+    "pandas==2.2.2",
+    "mwdust @ git+https://github.com/jobovy/mwdust@main",
+    "apogee @ git+https://github.com/astrojimig/apogee@dr17-selection",
+    ]
+
+[project.optional-dependencies]
+test = [
+    "pytest==8.2.2"
+    ]
+
+[project.urls]
+Repository = "https://github.com/astrojimig/mw_density_imig2025"
+Documentation = "https://github.com/astrojimig/mw_density_imig2025/README.md"
+
+[tool.setuptools]
+include-package-data = true
+packages = ["mw_density"]
+
+[tool.setuptools_scm]
+# can be empty if no extra settings are needed, presence enables setuptools_scm
+
+[tool.setuptools.package-dir]
+mw_density = "mw_density"
+
+[tool.setuptools.package-data]
+mw_density = ["*.py"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
