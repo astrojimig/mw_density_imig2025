@@ -1,41 +1,69 @@
 # mw_density_imig2025
-This repository contains the code and results from [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf)
+This repository contains the results, source code and data used in [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf) for studying the density structure of the Milky Way disk.
 
-If you have any questions, please contact the author: Julie Imig (jimig@stsci.edu)
+<p>
+<center>
+<button name="button" onclick="https://astrojimig.github.io/pdfs/Imig_MW_density.pdf">Read the paper here!</button>
+</center>
+</p>
 
-### <font color='red'>!!! This repository is still a work in progress !!! </font>
+If you have any questions or ideas, please contact the author: Julie Imig (jimig@stsci.edu)
+
+### <font color='red'>!!! This repository is still a work in progress !!! The code is still subject to edits until the paper is published. </font>
 
 # Introduction
 
 Introduction paragraph here...
 
 
-# The Jupyter Notebooks
+Scroll down to the [Installation Instructions](#installation-instructions) for guidance on how to clone and install this code.
 
-The code for reproducing the results and figures from [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf) is set up in a series of Jupyter notebooks in this directory. A brief overiew of each of them is provided below:
+# Code Overview
+
+## The Jupyter Notebooks
+
+The main code for reproducing the results and figures from [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf) is set up in a series of Jupyter notebooks in this directory. A brief overiew of each of them is provided below:
 
 ### Part 0: Sample Selection
 
-The notebook `Part0_Sample_Selection.ipynb`...
+Notebook: [`Part0_Sample_Selection.ipynb`](Part0_Sample_Selection.ipynb)|
+
+
+This notebook defines the data sample from the the APOGEE `allStar` file and produces plots showing various overviews and summaries of the data sample and of each defined stellar population. This includes Figures *X-Y* from the paper.
 
 ### Part 1: Selection Function
-The notebook `Part1_Selection Function.ipynb`...
+
+Notebook: [`Part1_Selection_Function.ipynb`](Part1_Selection_Function.ipynb)
+
+This notebook generates the raw and effective Selection Functions for APOGEE DR17 using the [`apogee` package](https://github.com/astrojimig/apogee/tree/dr17-selection), originally developed in [Bovy et al. 2012](http://arxiv.org/abs/1510.06745) and updated for DR17 in this work.
+
+This notebook... and includes Figures *X-Y* from the paper.
 
 ### Part 2: Density Fits
-The notebook `Part2_Density_Fits.ipynb`...
+Notebook: [`Part2_Density_Fits.ipynb`](`Part2_Density_Fits.ipynb)
+
+This notebook contains the code necessary for running the MCMC fits for finding the best-fit density parameters for each stellar population.
 
 ### Part 3: Plots and Analysis
-The notebook `Part3_Plot_and_Analysis.ipynb`...
+Notebook: [`Part3_Plot_and_Analysis.ipynb`](Part3_Plot_and_Analysis.ipynb)
 
+The final notebook in this repository analyzes the results from the MCMC fits and creates the remainder of the figures from the paper. This includes...
 
-# Results & Data
+## Results & Data
 
-## Results
+If you're interested in downloading the results of this study in a table format, look no further! All of the...
+
+<p>
+<center>
+<button name="button" onclick="">Download density_params.fits</button>
+</center>
+</p>
+
+### Results
 The `results/` directory contains the main results and all of the figures for the paper [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf). 
 
 
-
-## Data
+### Source Data
 The `data/` directory contains directory contains copies of the ancillary source data used in this study. This includes:
 
 - [`isochrones/parsec.dat`](data/isochrones/parsec.dat): a set of [PARSEC isochrones](https://stev.oapd.inaf.it/cgi-bin/cmd) for the age and metallicity limits of the sample ([Bressan et al, 2012](http://dx.doi.org/10.1111/j.1365-2966.2012.21948.x), [Chen et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.444.2525C))
@@ -58,22 +86,24 @@ A brief summary of each file:
 
 ## Installation Instructions
 
-To install this code...
+To install this code, first clone this repository into a location of your choice:
+
 ```
 git clone https://github.com/astrojimig/mw_density_imig2025
 ```
 
-Set up a new conda environment named "mw_density":
+ Next, set up a new conda environment named "mw_density":
+
 ```
 conda create -n mw_density python==3.11
 ```
 
-Activate your conda environment:
+Activate your conda environment with:
 ```
 conda activate mw_density
 ```
 
-Finally, install this code and all of the relevant dependencies with:
+Next, install this code and all of the relevant dependencies with:
 
 ```
 pip install -e .
@@ -81,6 +111,16 @@ pip install -e .
 
 The `-e` flag installs the repository in *editable* mode, meaning any changes you make to the files will automatically be saved and you won't need to install it again.
 
+Finally, launch a Jupyter Notebook kernel to view and run the notebooks described above:
+```
+jupyter notebook
+```
+
+# Citation
+This work is published under a [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) creative commons liscense.
+
+If you use any part of this code in any published work, please make sure to cite the following papers:
+- [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf)
 
 # Authors
 - Julie Imig, Space Telescope Science Institute (jimig@stsci.edu)
