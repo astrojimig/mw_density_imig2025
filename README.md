@@ -1,5 +1,5 @@
 # mw_density_imig2025
-This repository contains the results, source code and data used in [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf) for studying the density structure of the Milky Way disk.
+This repository contains the results, source code and data used in [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf) for studying the density structure of the Milky Way disk using SDSS-IV APOGEE.
 
 <p>
 <center>
@@ -78,10 +78,13 @@ The `mw_density/` directory contains most of the source code for this package. E
 
 A brief summary of each file:
 - [`density_profiles.py`](mw_density/density_profiles.py): Various equations for defining the parameterized density models
+- [`isochrones.py`](mw_density/isochrones.py): A wrapper class for working with the stellar isocrhones and calculating some quantities including the IMF
 - [`mcmc_functions.py`](mw_density/mcmc_functions.py): Setup and functions for performing the MCMC fits
 - [`plotting_helpers.py`](mw_density/plotting_helpers.py): Various functions to help make plots
 - [`sample_selection.py`](mw_density/sample_selection.py): Definitions and scripts for refining the data sample from the `allStar` and `DistMass` files
 - [`selection_function.py`](mw_density/selection_function.py): A wrapper class for the APOGEE DR17 selection function
+- [`spectra.py`](mw_density/spectra.py): Handler functions and utilities for working with spectra; this includes the MaStar SSP spectra and the mock integrated spectra of the Milky Way made with the SSPs.
+
 
 
 ## Installation Instructions
@@ -122,7 +125,10 @@ This work is published under a [CC BY 4.0](https://creativecommons.org/licenses/
 If you use any part of this code in any published work, please make sure to cite the following papers:
 - [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf)
 
+
 # Authors
+All the code in this repository was written by:
+
 - Julie Imig, Space Telescope Science Institute (jimig@stsci.edu)
 
-Please reach out if you have any questions or ideas!
+Please reach out if you have any questions or ideas for future projects using this work!
