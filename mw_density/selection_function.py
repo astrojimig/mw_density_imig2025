@@ -13,7 +13,7 @@ from typing import Any
 import os
 
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as PathEffects
+import matplotlib.patheffects as patheffects
 
 set_env_variables()
 PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,12 +22,14 @@ PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 class SelectionFunction:
     def __init__(self) -> None:
         # Set distmod bins from sample selection
+        print("Loading in Selection Function")
+        print("=" * 50)
         self.distmod_bins = distmod_bins()
         self.ndistmods, self.distances, self.distmods, self.minmax_distmods = (
             self.distmod_bins
         )
-        # Load in files
-        # Raw Selection Function
+        # Load in filexws
+        # Raw Selection Functionxw
         self.rawsel = self.load_raw_selfunc()
         # Effective Selection Function
         self.effsel = self.load_effselxarea_allbins()
@@ -39,6 +41,8 @@ class SelectionFunction:
 
         # Caclulate some volumes
         self.total_volume = self.calc_survey_volume()
+        print("Complete.")
+        print("=" * 50)
 
     def load_raw_selfunc(self) -> Any:
         """Load in the raw selection function file"""
@@ -69,25 +73,26 @@ class SelectionFunction:
 
         print(f"{goodbins}/{len(effsel)} good bins in selection function")
 
-        assert (
-            goodbins > 100
-        ), f"Only {goodbins} valid bins in the Effective Selection Function"
+        assert goodbins > 100, (
+            f"Only {goodbins} valid bins in the Effective Selection Function"
+        )
 
         # Times by Area
         if "area" not in effsel_name:  # in older version I saved it that way
-            print("x area...")
+            print("Converting to volume...")
             for i in range(len(effsel)):
                 for loc_i, loc in enumerate(self.rawsel._locations):
                     try:
                         effsel[i][loc_i] *= self.rawsel.area(loc)
-                    except Exception as e:
-                        # print(f"Encountered error, setting to 0, {e}")
+                    except Exception:
+                        # print(f"Encountered error, setting to 0."
+                        # + " Error message: {e}")
                         effsel[i][loc_i] = effsel[i][loc_i] * 0
 
-        # add that D**2 x delD factor to efffsel for fitting
-        delD = self.distances[1] - self.distances[0]
+        # add that D**2 x del_d factor to efffsel for fitting
+        del_d = self.distances[1] - self.distances[0]
         for i, f in enumerate(effsel):
-            effsel[i] = effsel[i] * self.distances * self.distances * delD
+            effsel[i] = effsel[i] * self.distances * self.distances * del_d
         return effsel
 
     def load_effsel_allbins(self) -> Any:
@@ -105,14 +110,14 @@ class SelectionFunction:
             # print(test)
             if test >= 0.5 * (
                 len(effsel[i].flatten())
-            ):  # more than 90% of effsel is good
+            ):  # more than 90% of effsel is finite
                 goodbins += 1
 
         print(f"{goodbins}/{len(effsel)} good bins in selection function")
 
-        assert (
-            goodbins > 100
-        ), f"Only {goodbins} valid bins in the Effective Selection Function"
+        assert goodbins > 100, (
+            f"Only {goodbins} valid bins in the Effective Selection Function"
+        )
 
         return effsel
 
@@ -127,19 +132,19 @@ class SelectionFunction:
         )
         distbins = self.distances * 1000  # kpc to pc
 
-        effsel_lons = []
-        effsel_lats = []
-        effsel_dist = []
+        effsel_lons_list = []
+        effsel_lats_list = []
+        effsel_dist_list = []
 
         for loc_i in range(len(self.rawsel._locations)):
             for dist_i in range(len(distbins)):
-                effsel_lons.append(effsel_glons[loc_i])
-                effsel_lats.append(effsel_glats[loc_i])
-                effsel_dist.append(distbins[dist_i])
+                effsel_lons_list.append(effsel_glons[loc_i])
+                effsel_lats_list.append(effsel_glats[loc_i])
+                effsel_dist_list.append(distbins[dist_i])
 
-        effsel_lons = np.array(effsel_lons)
-        effsel_lats = np.array(effsel_lats)
-        effsel_dist = np.array(effsel_dist)
+        effsel_lons = np.array(effsel_lons_list)
+        effsel_lats = np.array(effsel_lats_list)
+        effsel_dist = np.array(effsel_dist_list)
 
         effsel_coords = coordinates.SkyCoord(
             l=effsel_lons * units.degree,
@@ -176,8 +181,9 @@ class SelectionFunction:
         for loc in self.rawsel._locations:
             try:
                 solid_angles.append(self.rawsel.radius(loc))
-            except Exception as e:
+            except Exception:
                 solid_angles.append(np.nan)
+                # print(f"Encountered error: {e}")
 
         number_of_fields = len(solid_angles)
         max_distance = np.max(self.distances)
@@ -192,15 +198,16 @@ class SelectionFunction:
 
         # Adding up as cylinders over all the distance slices
         # field_volumes = []
-        # delD = self.distances[1] - self.distances[0]
+        # del_d = self.distances[1] - self.distances[0]
         # for field_i in range(number_of_fields):
-        #     solid_angle = units.arcsec.to(units.radian, solid_angles[field_i])
+        #     solid_angle = units.arcsec.to(units.radian,
+        #                                   solid_angles[field_i])
         #     field_volume = 0
         #     for distance_i in range(self.ndistmods):
         #         # middle value for r
-        #         slice_r = self.distances[distance_i] - (delD / 2)
+        #         slice_r = self.distances[distance_i] - (del_d / 2)
         #         r_cylind = slice_r * np.tan(solid_angle)
-        #         cylind_volume = np.pi * delD * (r_cylind**2)
+        #         cylind_volume = np.pi * del_d * (r_cylind**2)
         #         field_volume += cylind_volume
         #     field_volumes.append(field_volume)
 
@@ -218,26 +225,27 @@ class SelectionFunction:
         for loc in self.rawsel._locations:
             try:
                 solid_angles.append(self.rawsel.radius(loc))
-            except Exception as e:
+            except Exception:
                 solid_angles.append(np.nan)
+                # print(e)
 
         number_of_fields = len(solid_angles)
-        max_distance = np.max(self.distances)
+        # max_distance = np.max(self.distances)
 
         maap_effsel = self.effsel_noarea[effsel_i]
 
         # Adding up as cylinders over all the distance slices
         field_volumes = []  # total volume per pencil beam
         slice_volumes = []  # volume per slice of pencil beam
-        delD = self.distances[1] - self.distances[0]
+        del_d = self.distances[1] - self.distances[0]
         for field_i in range(number_of_fields):
             solid_angle = units.arcsec.to(units.radian, solid_angles[field_i])
             field_volume = 0
             for distance_i in range(self.ndistmods):
                 # middle value for r
-                slice_r = self.distances[distance_i] - (delD / 2.0)
+                slice_r = self.distances[distance_i] - (del_d / 2.0)
                 r_cylind = slice_r * np.tan(solid_angle)
-                cylind_volume = np.pi * delD * (r_cylind**2)
+                cylind_volume = np.pi * del_d * (r_cylind**2)
                 field_volume += (
                     cylind_volume * maap_effsel[field_i][distance_i]
                 )
@@ -293,7 +301,7 @@ class SelectionFunction:
                 fontsize=36,
             )
             tx.set_path_effects(
-                [PathEffects.withStroke(linewidth=3, foreground="w")]
+                [patheffects.withStroke(linewidth=3, foreground="w")]
             )
 
         ydeg = np.arange(-75, 76, 15)
@@ -302,7 +310,7 @@ class SelectionFunction:
         ydeg_labels[-1] = ""
         ax.set_yticklabels(ydeg_labels)
 
-        cbar = plt.colorbar(
+        plt.colorbar(
             im, ax=ax, label="Selection Fraction (%)"
         )  # ,orientation='horizontal')
         ax.set_title("Raw Selection Function", fontsize=36)

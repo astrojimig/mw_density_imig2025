@@ -6,7 +6,7 @@ Reference: J. Imig et al. 2025
 """
 
 import matplotlib.pyplot as plt
-import matplotlib.patheffects as PathEffects
+import matplotlib.patheffects as patheffects
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.collections import LineCollection
 import matplotlib as mpl
@@ -27,181 +27,81 @@ def plot_sun_and_GC(
     ax: Any = False,
 ) -> None:
     """Marks the sun and the GC on a plot"""
-    if not ax:
-        # plt.scatter([0],[0],marker='*',c='k',zorder=12,s=750*size,edgecolor='w',label='GC',lw=2*size)
-        # GC is a +
-        plt.scatter(
-            [0],
-            [0],
-            marker="+",
-            c="w",
-            zorder=11,
-            s=300 * size,
-            edgecolor="w",
-            label="GC",
-            lw=5 * size,
-            snap=False,
-        )
-        plt.scatter(
-            [0],
-            [0],
-            marker="+",
-            c="k",
-            zorder=12,
-            s=200 * size,
-            edgecolor="w",
-            label="GC",
-            lw=2 * size,
-            snap=False,
-        )
-        # Solar Position
-        plt.scatter(
-            [R_sun],
-            [0],
-            marker="o",
-            c="k",
-            s=250 * size,
-            zorder=12,
-            edgecolor="w",
-            label="Sun",
-            lw=2 * size,
-        )
-        plt.scatter(
-            [R_sun],
-            [0],
-            marker=".",
-            c="w",
-            s=50 * size,
-            zorder=12,
-            edgecolor="w",
-        )  # dot in center for sun symbol
-        # Add identifying text
-        if labels:
-            txt1 = plt.text(
-                R_sun,
-                1 * size,
-                "Sun",
-                horizontalalignment="center",
-                verticalalignment="bottom",
-                zorder=13,
-                color="k",
-                fontsize=24 * size,
-                weight="bold",
-            )
-            txt2 = plt.text(
-                0,
-                1 * size,
-                "Galactic\nCenter",
-                horizontalalignment="center",
-                verticalalignment="bottom",
-                zorder=13,
-                color="k",
-                fontsize=24 * size,
-                weight="bold",
-            )
-            txt1.set_path_effects(
-                [PathEffects.withStroke(linewidth=2 * size, foreground="w")]
-            )
-            txt2.set_path_effects(
-                [PathEffects.withStroke(linewidth=2 * size, foreground="w")]
-            )
-
-    else:
-        # ax.scatter([0],[0],marker='*',c='k',zorder=12,s=750*size,edgecolor='w',label='GC',lw=2*size)
+    # Plot GC
+    for i, mc in enumerate(["w", "k"]):
         ax.scatter(
             [0],
             [0],
             marker="+",
-            c="w",
-            zorder=11,
-            s=300 * size,
-            edgecolor="w",
-            label="GC",
-            lw=5 * size,
+            c=mc,
+            zorder=12 + i,
+            s=(400 - (i * 100)) * size,
+            lw=(5 - i * 2) * size,
             snap=False,
         )
-        ax.scatter(
-            [0],
-            [0],
-            marker="+",
-            c="k",
-            zorder=12,
-            s=200 * size,
-            edgecolor="w",
-            label="GC",
-            lw=2 * size,
-            snap=False,
+    # Plot Sun
+    ax.scatter(
+        [R_sun],
+        [0],
+        marker="o",
+        c="k",
+        facecolor="k",
+        s=250 * size,
+        zorder=12,
+        label="Sun",
+        lw=2 * size,
+        path_effects=[patheffects.withStroke(linewidth=5, foreground="w")],
+    )
+    # dot in center for sun symbol
+    ax.scatter(
+        [R_sun],
+        [0],
+        marker=".",
+        c="w",
+        s=50 * size,
+        zorder=13,
+        snap=False,
+    )
+    if labels:
+        ax.text(
+            R_sun,
+            1 * size,
+            "Sun",
+            horizontalalignment="center",
+            verticalalignment="bottom",
+            zorder=13,
+            color="k",
+            fontsize=24 * size,
+            weight="bold",
+            path_effects=[
+                patheffects.withStroke(linewidth=5 * size, foreground="w")
+            ],
         )
-        ax.scatter(
-            [R_sun],
-            [0],
-            marker="o",
-            c="k",
-            s=250 * size,
-            zorder=12,
-            edgecolor="w",
-            label="Sun",
-            lw=2 * size,
+        ax.text(
+            0,
+            1 * size,
+            "Galactic\nCenter",
+            horizontalalignment="center",
+            verticalalignment="bottom",
+            zorder=13,
+            color="k",
+            fontsize=24 * size,
+            weight="bold",
+            path_effects=[
+                patheffects.withStroke(linewidth=5 * size, foreground="w")
+            ],
         )
-        ax.scatter(
-            [R_sun],
-            [0],
-            marker=".",
-            c="w",
-            s=50 * size,
-            zorder=12,
-            edgecolor="w",
-        )  # dot in center for sun symbol
-        if labels:
-            txt1 = ax.text(
-                R_sun,
-                1 * size,
-                "Sun",
-                horizontalalignment="center",
-                verticalalignment="bottom",
-                zorder=13,
-                color="k",
-                fontsize=24 * size,
-                weight="bold",
-            )
-            txt2 = ax.text(
-                0,
-                1 * size,
-                "Galactic\nCenter",
-                horizontalalignment="center",
-                verticalalignment="bottom",
-                zorder=13,
-                color="k",
-                fontsize=24 * size,
-                weight="bold",
-            )
-            txt1.set_path_effects(
-                [PathEffects.withStroke(linewidth=2 * size, foreground="w")]
-            )
-            txt2.set_path_effects(
-                [PathEffects.withStroke(linewidth=2 * size, foreground="w")]
-            )
-        if add_bar == True:  # ellipse for bar location
-            if R_sun > 0:
-                Gbar = patches.Ellipse(
-                    (0, 0),
-                    10.0,
-                    0.4 * 10.0,
-                    angle=25,
-                    facecolor="None",
-                    edgecolor="k",
-                )
-            else:
-                Gbar = patches.Ellipse(
-                    (0, 0),
-                    10.0,
-                    0.4 * 10.0,
-                    angle=-25,
-                    facecolor="None",
-                    edgecolor="k",
-                )
-
-            ax.add_patch(Gbar)
+    if add_bar == True:  # ellipse for bar location
+        bar_angle = 25 if R_sun > 0 else -25
+        Gbar = patches.Ellipse(
+            (0, 0),
+            10.0,
+            0.4 * 10.0,
+            angle=bar_angle,
+            facecolor="None",
+            edgecolor="k",
+        )
+        ax.add_patch(Gbar)
 
     return
 
@@ -343,7 +243,7 @@ def bin_count_plot(lowalph, highalph, savename=None) -> None:
         )
     )
     plt.imshow(
-        ncount_distmass_LOW.T,
+        ncount_distmass_low.T,
         aspect=10,
         origin="lower",
         extent=[
@@ -381,7 +281,7 @@ def bin_count_plot(lowalph, highalph, savename=None) -> None:
                 weight="bold",
             )
             txt1.set_path_effects(
-                [PathEffects.withStroke(linewidth=3, foreground="k")]
+                [patheffects.withStroke(linewidth=3, foreground="k")]
             )
 
     plt.subplot(122)
@@ -391,7 +291,7 @@ def bin_count_plot(lowalph, highalph, savename=None) -> None:
         )
     )
     plt.imshow(
-        ncount_distmass_HIGH.T,
+        ncount_distmass_high.T,
         aspect=10,
         origin="lower",
         extent=[
@@ -429,7 +329,7 @@ def bin_count_plot(lowalph, highalph, savename=None) -> None:
                 weight="bold",
             )
             txt1.set_path_effects(
-                [PathEffects.withStroke(linewidth=3, foreground="k")]
+                [patheffects.withStroke(linewidth=3, foreground="k")]
             )
 
     plt.tight_layout()
@@ -545,7 +445,7 @@ def bin_count_plot_histo(
                     fontsize=15,
                 )
                 txt1.set_path_effects(
-                    [PathEffects.withStroke(linewidth=3, foreground="k")]
+                    [patheffects.withStroke(linewidth=3, foreground="k")]
                 )
             if (nhigh > 0) | (j > 3):
                 txt1 = ax5.text(
@@ -559,7 +459,7 @@ def bin_count_plot_histo(
                     fontsize=15,
                 )
                 txt1.set_path_effects(
-                    [PathEffects.withStroke(linewidth=3, foreground="k")]
+                    [patheffects.withStroke(linewidth=3, foreground="k")]
                 )
 
     histlim1 = 30000
@@ -627,7 +527,7 @@ def bin_count_plot_histo(
         fakeages[0], -0.72, "  Assumed Ages", va="top", ha="left", color="k"
     )
     txt1.set_path_effects(
-        [PathEffects.withStroke(linewidth=20, foreground="w")]
+        [patheffects.withStroke(linewidth=20, foreground="w")]
     )
     ax2.axhline(-0.7, lw=6, c="k", linestyle=":")
     ax2.text(
@@ -780,7 +680,7 @@ def bin_count_plot_histo_old(
                 fontsize=15,
             )
             txt1.set_path_effects(
-                [PathEffects.withStroke(linewidth=3, foreground="k")]
+                [patheffects.withStroke(linewidth=3, foreground="k")]
             )
             txt1 = ax5.text(
                 ac,
@@ -793,7 +693,7 @@ def bin_count_plot_histo_old(
                 fontsize=15,
             )
             txt1.set_path_effects(
-                [PathEffects.withStroke(linewidth=3, foreground="k")]
+                [patheffects.withStroke(linewidth=3, foreground="k")]
             )
 
     histlim1 = 25000
@@ -1062,7 +962,7 @@ def plot_model_from_params_EX(
         fontsize=48,
         verticalalignment="bottom",
     )
-    # txt1.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='k')])
+    # txt1.set_path_effects([patheffects.withStroke(linewidth=2, foreground='k')])
 
     paramstring = (
         r"$h_{z}(R_{\odot})$ = " + str(round(params[2], 1)) + " kpc \n"

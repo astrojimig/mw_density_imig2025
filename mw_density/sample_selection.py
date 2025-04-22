@@ -7,7 +7,6 @@ Reference: J. Imig et al. 2024
 """
 
 import os
-import sys
 import datetime
 import numpy as np
 from astropy.table import Column
@@ -26,7 +25,7 @@ def set_env_variables() -> None:
     """
     Set environment variables
     """
-    sys.path.insert(1, "/Users/jimig/research/apogee/")
+    # sys.path.insert(1, "/Users/jimig/research/apogee/")
 
     results_vers = "dr17"
     os.environ["RESULTS_VERS"] = results_vers
@@ -77,7 +76,6 @@ def setup_maap_bins() -> tuple[bin_type, bin_type]:
     """
     # Metallicity bins
     delta_mh = 0.1
-    # feh_bins_center = np.arange(-0.65,0.46,delta_mh)
     mh_bins_center = np.arange(-0.95, 0.46, delta_mh)
 
     mh_bins_min = mh_bins_center - (delta_mh / 2.0)
@@ -319,17 +317,17 @@ def assume_high_alpha_ages(
     _, high_alpha_mask = get_alpha_masks(allstar)
     orig_ages = np.log10(distmass["AGE_UNCOR_SS"])  # work in log ages
 
-    orig_age_bin = []
+    orig_age_bin_list = []
     for age in orig_ages:
-        orig_age_bin.append(
+        orig_age_bin_list.append(
             (np.abs(np.log10(age_bins["center"] * 1e9) - age).argmin())
         )
-    orig_age_bin = np.array(orig_age_bin)
+    orig_age_bin = np.array(orig_age_bin_list)
 
-    metal_bin = []
+    metal_bin_list = []
     for m_h in allstar["M_H"]:
-        metal_bin.append((np.abs(mh_bins["center"] - m_h)).argmin())
-    metal_bin = np.array(metal_bin)
+        metal_bin_list.append((np.abs(mh_bins["center"] - m_h)).argmin())
+    metal_bin = np.array(metal_bin_list)
 
     # Age distribution to match
     target_mask = (
@@ -545,12 +543,12 @@ def write_file_header(save_filename: str) -> None:
         hdr["REFERENC"] = ("Imig et al. 2025", "Primary Reference")
         if "apogee_sample" in save_filename:
             hdr["DESCRIP"] = (
-                "APOGEE RGB sample data used in Imig et al 2024",
+                "APOGEE RGB sample data used in Imig et al 2025",
                 "description",
             )
         elif "density_params" in save_filename:
             hdr["DESCRIP"] = (
-                "Milky Way Density Measurements from Imig et al 2024",
+                "Milky Way Density Measurements from Imig et al 2025",
                 "description",
             )
 
