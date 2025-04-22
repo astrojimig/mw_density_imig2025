@@ -16,6 +16,8 @@ dependencies = [
     "matplotlib==3.9.1",
     "numpy==2.0.0",
     "pandas==2.2.2",
+    "tqdm==4.66.4",
+    "sdss-mangadap==4.2.0",
     "mwdust @ git+https://github.com/jobovy/mwdust@main",
     "apogee @ git+https://github.com/astrojimig/apogee@dr17-selection",
     ]
