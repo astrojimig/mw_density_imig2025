@@ -10,11 +10,11 @@ import emcee
 import numpy as np
 from mw_density.density_profiles import combined_exp_profile_nonsmoothed_linear
 from mw_density.sample_selection import setup_maap_bins
-from mw_density.selection_function import resample_effsel
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from numpy.typing import NDArray
 from typing import Any, Callable, Union
 from astropy.io import fits
+from numba import jit
 
 
 def set_param_limits() -> NDArray:
@@ -28,55 +28,11 @@ def set_param_limits() -> NDArray:
             [0.0, 5.0],  # limits for h_out
             [0.0, 2.5],  # limits for h_z
             [0.0, 20],  # limits for r_peak
-            [0.0, 0.1],  # limits for a_flare
+            [0.0, 0.5],  # limits for a_flare
             # [0, 15.0],  # limits for nu_0
         ]
     )
     return param_lims
-
-
-def mcmc_config() -> tuple[int, int, int]:
-    """
-    Define various parameters for the MCMC configuration.
-    """
-    # Set up some MCMC configuration
-    # Number of Walkers
-    nwalkers = 50
-    # Burn-in period
-    burn_in = 100
-    # Number of iterations
-    niter = 1000
-    return nwalkers, burn_in, niter
-
-
-def random_starting_guess(nwalkers: int) -> NDArray:
-    """
-    Choose a random starting guess from within the parameter limits
-    """
-    param_lims = set_param_limits()
-    p0 = []
-    for n in range(nwalkers):
-        # choose random starting guesses within the limits
-        h = np.random.choice(
-            np.linspace(param_lims[0][0], param_lims[0][1], 100)
-        )
-        h2 = np.random.choice(
-            np.linspace(param_lims[1][0], param_lims[1][1], 100)
-        )
-        hz = np.random.choice(
-            np.linspace(param_lims[2][0], param_lims[2][1], 100)
-        )
-        rp = np.random.choice(
-            np.linspace(param_lims[3][0], param_lims[3][1], 100)
-        )
-        rf = np.random.choice(
-            np.linspace(param_lims[4][0], param_lims[4][1], 100)
-        )
-        # norm = np.random.choice(
-        #    np.linspace(param_lims[5][0], param_lims[5][1], 100)
-        # )
-        p0.append([h, h2, hz, rp, rf])  # , norm])
-    return np.array(p0)
 
 
 def check_bounds(theta: NDArray, r_sun: float = 8.122) -> bool:
@@ -99,6 +55,50 @@ def check_bounds(theta: NDArray, r_sun: float = 8.122) -> bool:
         prior = False
 
     return prior
+
+
+def mcmc_config() -> tuple[int, int, int]:
+    """
+    Define various parameters for the MCMC configuration.
+    """
+    # Set up some MCMC configuration
+    # Number of Walkers
+    nwalkers = 100
+    # Burn-in period
+    burn_in = 500
+    # Number of iterations after burn-in
+    niter = 1000
+    return nwalkers, burn_in, niter
+
+
+def random_starting_guess(nwalkers: int) -> NDArray:
+    """
+    Choose a random starting guess from within the parameter limits
+    """
+    param_lims = set_param_limits()
+    p0 = []
+    for n in range(nwalkers):
+        # choose random starting guesses within the limits
+        h = np.random.choice(
+            np.linspace(param_lims[0][0], param_lims[0][1], 1000)
+        )
+        h2 = np.random.choice(
+            np.linspace(param_lims[1][0], param_lims[1][1], 1000)
+        )
+        hz = np.random.choice(
+            np.linspace(param_lims[2][0], param_lims[2][1], 1000)
+        )
+        rp = np.random.choice(
+            np.linspace(param_lims[3][0], param_lims[3][1], 1000)
+        )
+        rf = np.random.choice(
+            np.linspace(param_lims[4][0], param_lims[4][1], 1000)
+        )
+        # norm = np.random.choice(
+        #    np.linspace(param_lims[5][0], param_lims[5][1], 100)
+        # )
+        p0.append([h, h2, hz, rp, rf])  # , norm])
+    return np.array(p0)
 
 
 def log_probability(
@@ -128,6 +128,11 @@ def log_probability(
     Outputs:
         log_likelihood: quanitity to minimize in MCMC
     """
+    # Change dtype for numba jit
+    theta = theta.astype("float64")
+    r_data = r_data.astype("float64")
+    z_data = z_data.astype("float64")
+
     # Priors = make sure parameters are within the search boundaries
     if not check_bounds(theta):
         return -np.inf
@@ -271,7 +276,7 @@ def perform_maap_density_fit(
         bin_effsel_zs = effsel_dict["bin_effsel_zs"]
         bin_effsel = effsel_dict["bin_effsel"]
         survey_volume = effsel_dict["eff_volume"]
-        # Resample Effsel to data coords to prevent volume issue
+        # Resample Effsel to data coords to prevent volume issue?
         # bin_effsel = resample_effsel(effsel_dict, bin_r_data, bin_z_data)
         # bin_effsel_rs = np.copy(bin_r_data)
         # bin_effsel_zs = np.copy(bin_z_data)
@@ -287,7 +292,11 @@ def perform_maap_density_fit(
             survey_volume,
         ]
 
-        if nthreads:
+        if nthreads:  # With multiprocessing
+            assert nthreads <= cpu_count(), (
+                f"ValueError: number of threads {nthreads}"
+                f"is greater than {cpu_count()} available CPU"
+            )
             sampler = emcee.EnsembleSampler(
                 nwalkers,
                 ndim,
@@ -295,7 +304,7 @@ def perform_maap_density_fit(
                 args=lnprob_args,
                 pool=Pool(nthreads),
             )
-        else:
+        else:  # No Multiprocessing
             sampler = emcee.EnsembleSampler(
                 nwalkers, ndim, log_probability, args=lnprob_args
             )
@@ -308,24 +317,56 @@ def perform_maap_density_fit(
         print("Running production...")
         pos, prob, state = sampler.run_mcmc(p0, niter, progress=True)
 
-        # Save it out
+        # Compare median and maximum likelihood results
+        # If it hasn't converged yet, run the MCMC for longer
+        max_results = sampler.flatchain[np.argmax(sampler.flatlnprobability)]
+        med_results = np.nanmedian(sampler.flatchain, axis=0)
+        param_limits = set_param_limits()
+        # normalize to limits so no parameter is weighted more than another
+        for i_p in range(len(param_limits)):
+            pmax = np.max(param_limits[i_p]) - np.min(param_limits[i_p])
+            pmin = np.min(param_limits[i_p])
+            max_results[i_p] = (max_results[i_p] - pmin) / pmax
+            med_results[i_p] = (med_results[i_p] - pmin) / pmax
+
+        param_distance = np.nansum(np.abs(max_results - med_results))
+        if param_distance >= 0.5:  # More than 50% difference
+            print(f"Convergence warning...continuing for {niter} steps.")
+            max_results = sampler.flatchain[
+                np.argmax(sampler.flatlnprobability)
+            ]
+            med_results = np.nanmedian(sampler.flatchain, axis=0)
+            print(f"MAX: {max_results}")
+            print(f"MED: {med_results}")
+            pos, prob, state = sampler.run_mcmc(pos, niter, progress=True)
+
+        # Save out the final results
         np.savez(
             fname,
             chain=sampler.flatchain,
             flatlnprobability=sampler.flatlnprobability,
         )
 
-        best_fit_params = sampler.flatchain[
-            np.argmax(sampler.flatlnprobability)
+        # Return best fit params: maximum likelihood in the last 10% of steps!
+        last_n = int(nwalkers * niter * 0.1)
+        best_fit_params = sampler.flatchain[-last_n:][
+            np.argmax(sampler.flatlnprobability[-last_n:])
         ]
 
-        param_string = "BEST FIT RESULTS: \n"
-        param_string += f"\t hr_in = {round(1.0 / best_fit_params[0], 2)}\n"
-        param_string += f"\t hr_out = {round(1.0 / best_fit_params[1], 2)}\n"
-        param_string += f"\t r_peak = {round(best_fit_params[3], 2)}\n"
-        param_string += f"\t h_z0 = {round(best_fit_params[2], 3)}\n"
-        param_string += f"\t A_flare = {round(best_fit_params[4], 3)}\n"
-        # param_string += f"\t nu_0 = {round(best_fit_params[5], 2)}\n"
-
-        print(param_string)
+        # Print results in reader-friendly format
+        print(format_param_string(best_fit_params))
         return best_fit_params
+
+
+def format_param_string(bfp: NDArray) -> str:
+    """
+    Formats and prints a string from the array of best fit parameters
+    """
+    param_string = "BEST FIT RESULTS: \n"
+    param_string += f"\t hr_in [kpc] = {round(1.0 / bfp[0], 2)}\n"
+    param_string += f"\t hr_out [kpc]  = {round(1.0 / bfp[1], 2)}\n"
+    param_string += f"\t r_peak [kpc] = {round(bfp[3], 2)}\n"
+    param_string += f"\t h_z0 [kpc] = {round(bfp[2], 3)}\n"
+    param_string += f"\t A_flare = {round(bfp[4], 3)}\n"
+    # param_string += f"\t nu_0 = {round(best_fit_params[5], 2)}\n"
+    return param_string
