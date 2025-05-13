@@ -13,18 +13,19 @@ import matplotlib as mpl
 import matplotlib.patches as patches
 import numpy as np
 from mw_density.sample_selection import setup_maap_bins
-from typing import Any, Callable
+from typing import Callable
 from numpy.typing import NDArray
+from matplotlib.axes import Axes
 
 age_bins, mh_bins = setup_maap_bins()
 
 
-def plot_sun_and_GC(
+def plot_sun_and_gc(
     size: float = 1,
-    R_sun: float = -8.122,
+    r_sun: float = -8.122,
     add_bar: bool = False,
     labels: bool = True,
-    ax: Any = False,
+    ax: Axes = plt.subplot(),
 ) -> None:
     """Marks the sun and the GC on a plot"""
     # Plot GC
@@ -41,7 +42,7 @@ def plot_sun_and_GC(
         )
     # Plot Sun
     ax.scatter(
-        [R_sun],
+        [r_sun],
         [0],
         marker="o",
         c="k",
@@ -54,7 +55,7 @@ def plot_sun_and_GC(
     )
     # dot in center for sun symbol
     ax.scatter(
-        [R_sun],
+        [r_sun],
         [0],
         marker=".",
         c="w",
@@ -64,7 +65,7 @@ def plot_sun_and_GC(
     )
     if labels:
         ax.text(
-            R_sun,
+            r_sun,
             1 * size,
             "Sun",
             horizontalalignment="center",
@@ -91,9 +92,9 @@ def plot_sun_and_GC(
                 patheffects.withStroke(linewidth=5 * size, foreground="w")
             ],
         )
-    if add_bar == True:  # ellipse for bar location
-        bar_angle = 25 if R_sun > 0 else -25
-        Gbar = patches.Ellipse(
+    if add_bar:  # ellipse for bar location
+        bar_angle = 25 if r_sun > 0 else -25
+        gbar = patches.Ellipse(
             (0, 0),
             10.0,
             0.4 * 10.0,
@@ -101,18 +102,18 @@ def plot_sun_and_GC(
             facecolor="None",
             edgecolor="k",
         )
-        ax.add_patch(Gbar)
+        ax.add_patch(gbar)
 
     return
 
 
 def plot_model_from_params(
-    model: Callable, params: NDArray, savename: str = None
+    model: Callable, params: NDArray, savename: str = ""
 ) -> None:
     r_coords = np.arange(-20, 20, 0.1)
     z_coords = np.arange(-20, 20, 0.1)
     # massdens = model(params, r_coords, z_coords)
-    massdens = mass_at_loc2D(model, params, r_coords, z_coords)
+    massdens = mass_at_loc2d(model, params, r_coords, z_coords)
     if len(params) == 5:
         hri, hro, hz0, rp, rf = params
         norm = 1.0
@@ -121,10 +122,10 @@ def plot_model_from_params(
 
     plt.figure(figsize=(30, 15))
     ax0 = plt.subplot2grid((2, 4), (0, 0), colspan=2, rowspan=2)  # full pix
-    ax_R2D = plt.subplot2grid((2, 4), (0, 2), colspan=1, rowspan=1)  # 2D R
-    ax_Z2D = plt.subplot2grid((2, 4), (0, 3), colspan=1, rowspan=1)  # 2D Z
-    ax_R1D = plt.subplot2grid((2, 4), (1, 2), colspan=1, rowspan=1)  # 1D R
-    ax_Z1D = plt.subplot2grid((2, 4), (1, 3), colspan=1, rowspan=1)  # 1D Z
+    ax_r2d = plt.subplot2grid((2, 4), (0, 2), colspan=1, rowspan=1)  # 2D R
+    ax_z2d = plt.subplot2grid((2, 4), (0, 3), colspan=1, rowspan=1)  # 2D Z
+    ax_r1d = plt.subplot2grid((2, 4), (1, 2), colspan=1, rowspan=1)  # 1D R
+    ax_z1d = plt.subplot2grid((2, 4), (1, 3), colspan=1, rowspan=1)  # 1D Z
 
     # Full Pic
     cim = ax0.imshow(
@@ -135,10 +136,10 @@ def plot_model_from_params(
     ax0.set_ylabel("z (kpc)")
     ax0.set_title("Total Profile", fontsize=36)
 
-    for ax in [ax_R2D, ax_Z2D]:
-        plot_sun_and_GC(size=1, ax=ax, labels=False)
+    for ax in [ax_r2d, ax_z2d]:
+        plot_sun_and_gc(size=1, ax=ax, labels=False)
 
-    plot_sun_and_GC(size=1, ax=ax0)
+    plot_sun_and_gc(size=1, ax=ax0)
 
     # R profile 2D
     rprofile = model(params, r_coords, np.zeros(len(r_coords)))
@@ -147,32 +148,32 @@ def plot_model_from_params(
         r = np.sqrt((x**2) + (z_coords**2))
         r2d[ix] += np.interp(r, r_coords, rprofile)
 
-    ax_R2D.imshow(np.log10(r2d.T), extent=(-20, 20, -20, 20), origin="lower")
-    ax_R2D.set_title("Radial Profile", fontsize=36)
-    ax_R2D.set_xlabel("x (kpc)")
-    ax_R2D.set_ylabel("y (kpc)")
+    ax_r2d.imshow(np.log10(r2d.T), extent=(-20, 20, -20, 20), origin="lower")
+    ax_r2d.set_title("Radial Profile", fontsize=36)
+    ax_r2d.set_xlabel("x (kpc)")
+    ax_r2d.set_ylabel("y (kpc)")
 
     # Z profile 2D
     z2d = massdens
-    ax_Z2D.imshow(np.log10(z2d), extent=(-20, 20, -20, 20), origin="lower")
-    ax_Z2D.set_title("Vertical Profile", fontsize=36)
-    ax_Z2D.set_xlabel("x (kpc)")
-    ax_Z2D.set_ylabel("z (kpc)")
+    ax_z2d.imshow(np.log10(z2d), extent=(-20, 20, -20, 20), origin="lower")
+    ax_z2d.set_title("Vertical Profile", fontsize=36)
+    ax_z2d.set_xlabel("x (kpc)")
+    ax_z2d.set_ylabel("z (kpc)")
 
-    for ax in [ax_R1D, ax_Z1D]:
+    for ax in [ax_r1d, ax_z1d]:
         ax.grid()
         ax.set_yscale("log")
         ax.set_ylabel(r"log($\nu_{*}$)")
 
     for z in [0, 5, 10, 15, 19.9]:
         i = np.where(r_coords >= z)[0][0]
-        ax_R1D.scatter(
+        ax_r1d.scatter(
             r_coords,
             massdens[i],
             c=np.log10(massdens[i]),
             label="r={}".format(r_coords[i]),
         )
-        ax_R1D.text(
+        ax_r1d.text(
             0,
             massdens[i][int(len(r_coords) / 2)],
             "z = {} kpc".format(int(r_coords[i])),
@@ -182,13 +183,13 @@ def plot_model_from_params(
 
     for z in [0, 5, 10, 15, 19.9]:
         i = np.where(r_coords >= z)[0][0]
-        ax_Z1D.scatter(
+        ax_z1d.scatter(
             r_coords,
             massdens.T[i],
             c=np.log10(massdens.T[i]),
             label="z={}".format(r_coords[i]),
         )
-        ax_Z1D.text(
+        ax_z1d.text(
             0,
             massdens.T[i][int(len(r_coords) / 2)],
             "r = {} kpc".format(int(r_coords[i])),
@@ -196,17 +197,17 @@ def plot_model_from_params(
             va="bottom",
         )
 
-    ax_Z1D.set_xlabel("z (kpc)")
-    ax_R1D.set_xlabel("r (kpc)")
+    ax_z1d.set_xlabel("z (kpc)")
+    ax_r1d.set_xlabel("r (kpc)")
 
     plt.tight_layout()
-    if savename != None:
+    if savename:
         plt.savefig(savename, bbox_inches="tight")
 
     plt.show()
 
 
-def mass_at_loc2D(
+def mass_at_loc2d(
     model: Callable,
     params: NDArray,
     r_points: NDArray,
@@ -227,14 +228,19 @@ def mass_at_loc2D(
     """
 
     out = np.zeros((len(r_points), len(z_points)))
+    # Change dtype
+    params = np.array(params).astype("float64")
+    r_points = np.array(r_points).astype("float64")
+    z_points = np.array(z_points).astype("float64")
     for i in range(len(r_points)):
         out[i] += model(params, r_points, np.ones(len(z_points)) * z_points[i])
-
     return out
 
 
 # And some plotting helper functions...
-def bin_count_plot(lowalph, highalph, savename=None) -> None:
+def bin_count_plot(
+    lowalph: NDArray, highalph: NDArray, savename: str = ""
+) -> None:
     plt.figure(figsize=(20, 10))
     plt.subplot(121)
     plt.title(
@@ -246,12 +252,12 @@ def bin_count_plot(lowalph, highalph, savename=None) -> None:
         ncount_distmass_low.T,
         aspect=10,
         origin="lower",
-        extent=[
+        extent=(
             age_bins["min"][0],
             age_bins["max"][-1],
             mh_bins["min"][0],
             mh_bins["max"][-1],
-        ],
+        ),
     )
 
     for f in mh_bins["min"]:
@@ -294,12 +300,12 @@ def bin_count_plot(lowalph, highalph, savename=None) -> None:
         ncount_distmass_high.T,
         aspect=10,
         origin="lower",
-        extent=[
+        extent=(
             age_bins["min"][0],
             age_bins["max"][-1],
             mh_bins["min"][0],
             mh_bins["max"][-1],
-        ],
+        ),
     )
 
     for f in mh_bins["min"]:
@@ -333,15 +339,18 @@ def bin_count_plot(lowalph, highalph, savename=None) -> None:
             )
 
     plt.tight_layout()
-    if savename != None:
+    if savename:
         plt.savefig(savename, bbox_inches="tight")
     plt.show()
 
 
 # And some plotting helper functions...
 def bin_count_plot_histo(
-    lowalph, highalph, savename=None, orientation="horizontal"
-):
+    lowalph: NDArray,
+    highalph: NDArray,
+    savename: str = "",
+    orientation: str = "horizontal",
+) -> None:
     if orientation == "horizontal":
         plt.figure(figsize=(40, 18))
         ax1 = plt.subplot2grid((4, 9), (0, 0), colspan=3, rowspan=1)  # hist1a
@@ -367,12 +376,12 @@ def bin_count_plot_histo(
         lowalph.T,
         aspect=10,
         origin="lower",
-        extent=[
+        extent=(
             age_bins["min"][0],
             age_bins["max"][-1],
             mh_bins["min"][0],
             mh_bins["max"][-1],
-        ],
+        ),
         cmap=LinearSegmentedColormap.from_list(
             "", ["white", "tab:blue", "darkblue"]
         ),
@@ -384,12 +393,12 @@ def bin_count_plot_histo(
         highalph.T,
         aspect=10,
         origin="lower",
-        extent=[
+        extent=(
             age_bins["min"][0],
             age_bins["max"][-1],
             mh_bins["min"][0],
             mh_bins["max"][-1],
-        ],
+        ),
         cmap=LinearSegmentedColormap.from_list(
             "", ["white", "tab:red", "darkred"]
         ),
@@ -407,10 +416,8 @@ def bin_count_plot_histo(
         for a in fakeages:
             ax.axvline(a, c="lightgray")
 
-        # ac = np.array([(fakeages[i]+fakeages[i+1])/2 for i in range(len(fakeages)-1)])
         ac = fakeages
         ax.set_xticks(ac)
-        # ax.set_xticklabels(np.round(np.append(age_bins['min'],age_bins['max'][-1]),1))
         age_tick_labels = [
             round(x, 1)
             for x in np.append(
@@ -477,11 +484,9 @@ def bin_count_plot_histo(
         ax.set_yticklabels(tick_value_labels)
         ax.set_xlim(age_bins["min"][0], age_bins["max"][-1])
         ax.set_xticks(fakeages)
-        # ax.set_xticklabels(np.round(np.append(age_bins['min'],age_bins['max'][-1]),1))
         ax.set_xticklabels([])
         ax.set_ylabel(r"N$_{/1000}$", fontsize=36)
         ax.yaxis.labelpad = 20
-        # ax.axhline(0,c='k',lw=5)
 
     for ax in [ax3, ax6]:
         ax.set_xlim(0, histlim2)
@@ -493,8 +498,6 @@ def bin_count_plot_histo(
         ax.set_ylim(mh_bins["min"][0], mh_bins["max"][-1])
         ax.set_yticks(np.append(mh_bins["min"], mh_bins["max"][-1]))
         ax.set_yticklabels([])
-        # ax.axvline(0,c='k',lw=5)
-        # ax.set_xticklabels([''] + [ii for ii in np.arange(5,31,5)],rotation=-90)
         ax.xaxis.tick_top()
         ax.set_xlabel(r"N$_{/1000}$", fontsize=36)
         ax.xaxis.set_label_position("top")
@@ -544,33 +547,35 @@ def bin_count_plot_histo(
     z = highalph.T
     add_iso_line(ax5, 100, "gray", x, y, z)
 
-    if savename != None:
+    if savename:
         plt.savefig(savename, bbox_inches="tight")
 
     plt.show()
     return
 
 
-def add_iso_line(ax, value, color, x, y, z):
+def add_iso_line(
+    ax: Axes, value: int, color: str, x: NDArray, y: NDArray, z: NDArray
+) -> None:
     """Add isophot line to show which bins have enough stars to get MCMC'd"""
     v = np.diff(z > value, axis=1)
     h = np.diff(z > value, axis=0)
 
-    l = np.argwhere(v.T)
+    lineval = np.argwhere(v.T)
     vlines = np.array(
         list(
             zip(
-                np.stack((x[l[:, 0] + 1], y[l[:, 1]])).T,
-                np.stack((x[l[:, 0] + 1], y[l[:, 1] + 1])).T,
+                np.stack((x[lineval[:, 0] + 1], y[lineval[:, 1]])).T,
+                np.stack((x[lineval[:, 0] + 1], y[lineval[:, 1] + 1])).T,
             )
         )
     )
-    l = np.argwhere(h.T)
+    lineval = np.argwhere(h.T)
     hlines = np.array(
         list(
             zip(
-                np.stack((x[l[:, 0]], y[l[:, 1] + 1])).T,
-                np.stack((x[l[:, 0] + 1], y[l[:, 1] + 1])).T,
+                np.stack((x[lineval[:, 0]], y[lineval[:, 1] + 1])).T,
+                np.stack((x[lineval[:, 0] + 1], y[lineval[:, 1] + 1])).T,
             )
         )
     )
@@ -579,8 +584,11 @@ def add_iso_line(ax, value, color, x, y, z):
 
 
 def bin_count_plot_histo_old(
-    lowalph, highalph, savename=None, orientation="horizontal"
-):
+    lowalph: NDArray,
+    highalph: NDArray,
+    savename: str = "",
+    orientation: str = "horizontal",
+) -> None:
     if orientation == "horizontal":
         plt.figure(figsize=(40, 14.8))
         ax1 = plt.subplot2grid((4, 9), (0, 0), colspan=3, rowspan=1)  # hist1a
@@ -645,10 +653,8 @@ def bin_count_plot_histo_old(
         for a in fakeages:
             ax.axvline(a, c="lightgray")
 
-        # ac = np.array([(fakeages[i]+fakeages[i+1])/2 for i in range(len(fakeages)-1)])
         ac = fakeages
         ax.set_xticks(ac)
-        # ax.set_xticklabels(np.round(np.append(age_bins['min'],age_bins['max'][-1]),1))
         age_tick_labels = [
             round(x, 1)
             for x in np.append(
@@ -697,7 +703,6 @@ def bin_count_plot_histo_old(
             )
 
     histlim1 = 25000
-    histlim2 = 25000
     step = np.sum(lowalph, axis=1)
     step = np.append(step[0], step)
     ax1.step(fakeages, step, c="tab:blue", lw=5)
@@ -739,7 +744,6 @@ def bin_count_plot_histo_old(
     for ax in [ax1, ax4]:
         ax.set_xlim(age_bins["min"][0], age_bins["max"][-1])
         ax.set_xticks(fakeages)
-        # ax.set_xticklabels(np.round(np.append(age_bins['min'],age_bins['max'][-1]),1))
         ax.set_xticklabels([])
         ax.set_ylabel(r"N$_{/1000}$", fontsize=36)
         ax.yaxis.labelpad = 20
@@ -757,28 +761,31 @@ def bin_count_plot_histo_old(
 
     plt.subplots_adjust(wspace=0, hspace=0)
 
-    if savename != None:
+    if savename:
         plt.savefig(savename, bbox_inches="tight")
-
     plt.show()
     return
 
 
-def plot_model_from_params_EX(
-    model,
-    params,
-    density_cmap="magma",
-    savename=None,
-    annotate=True,
-    bin_title=None,
-):
+def plot_model_from_params_ex(
+    model: Callable,
+    params: list,
+    density_cmap: str = "magma",
+    savename: str = "",
+    annotate: bool = True,
+    bin_title: str = "",
+) -> None:
     density_cmap = "magma"
     dmin, dmax = (-30, 2)
 
+    params = np.array(params).astype("float64")
     r_coords = np.arange(-20, 20, 0.1)
     z_coords = np.arange(-20, 20, 0.1)
+    r_coords = r_coords.astype("float64")
+    z_coords = z_coords.astype("float64")
+
     # massdens = model(params, r_coords, z_coords)
-    massdens = mass_at_loc2D(model, params, r_coords, z_coords)
+    massdens = mass_at_loc2d(model, params, r_coords, z_coords)
     if len(params) == 5:
         hri, hro, hz0, rp, rf = params
         norm = 1.0
@@ -794,23 +801,23 @@ def plot_model_from_params_EX(
     )  # full pix
     # ax0_cax = plt.subplot2grid(aspect_size, (0, aspect_size[0]), colspan=1, rowspan=aspect_size[0])
 
-    ax_R2D = plt.subplot2grid(
+    ax_r2d = plt.subplot2grid(
         aspect_size, (0, aspect_size[0] + 1), colspan=sm_size, rowspan=sm_size
     )  # 2D R
-    ax_Z2D = plt.subplot2grid(
+    ax_z2d = plt.subplot2grid(
         aspect_size,
         (0, aspect_size[0] + sm_size + 1),
         colspan=sm_size,
         rowspan=sm_size,
     )  # 2D Z
 
-    ax_R1D = plt.subplot2grid(
+    ax_r1d = plt.subplot2grid(
         aspect_size,
         (sm_size, aspect_size[0] + 1),
         colspan=sm_size,
         rowspan=sm_size,
     )  # 1D R
-    ax_Z1D = plt.subplot2grid(
+    ax_z1d = plt.subplot2grid(
         aspect_size,
         (sm_size, aspect_size[0] + sm_size + 1),
         colspan=sm_size,
@@ -839,14 +846,16 @@ def plot_model_from_params_EX(
         vmax=dmax,
         vmin=dmin,
     )
-    plt.colorbar(cim, ax=ax0, label=r"log($\nu_{*}$)", extend="both")
+    plt.colorbar(cim, ax=ax0, extend="both").set_label(
+        label=r"log($\nu_{*}$)", size=36
+    )
     ax0.set_xlabel("x (kpc)")
     ax0.set_ylabel("z (kpc)")
     ax0.set_title("Total Density Profile", fontsize=36)
-    for ax in [ax_R2D, ax_Z2D]:
-        plot_sun_and_GC(size=1, ax=ax, labels=False)
+    for ax in [ax_r2d, ax_z2d]:
+        plot_sun_and_gc(size=1, ax=ax, labels=False)
 
-    plot_sun_and_GC(size=1.5, ax=ax0)
+    plot_sun_and_gc(size=1.5, ax=ax0)
 
     # R profile 2D
     rprofile = model(params, r_coords, np.zeros(len(r_coords)))
@@ -855,19 +864,19 @@ def plot_model_from_params_EX(
         r = np.sqrt((x**2) + (z_coords**2))
         r2d[ix] += np.interp(r, r_coords, rprofile)
 
-    ax_R2D.imshow(
+    ax_r2d.imshow(
         np.log10(r2d.T),
         extent=(-20, 20, -20, 20),
         origin="lower",
         cmap=density_cmap,
     )
-    ax_R2D.set_title("Radial Profile", fontsize=36)
-    ax_R2D.set_xlabel("x (kpc)")
-    ax_R2D.set_ylabel("y (kpc)")
+    ax_r2d.set_title("Radial Profile", fontsize=36)
+    ax_r2d.set_xlabel("x (kpc)")
+    ax_r2d.set_ylabel("y (kpc)")
 
     # Z profile 2D
     z2d = np.array([massdens[i] / rprofile for i in range(len(massdens))])
-    ax_Z2D.imshow(
+    ax_z2d.imshow(
         np.log10(z2d),
         extent=(-20, 20, -20, 20),
         origin="lower",
@@ -875,18 +884,18 @@ def plot_model_from_params_EX(
         vmax=dmax,
         vmin=dmin,
     )
-    ax_Z2D.set_title("Vertical Profile", fontsize=36)
-    ax_Z2D.set_xlabel("x (kpc)")
-    ax_Z2D.set_ylabel("z (kpc)")
+    ax_z2d.set_title("Vertical Profile", fontsize=36)
+    ax_z2d.set_xlabel("x (kpc)")
+    ax_z2d.set_ylabel("z (kpc)")
 
-    for ax in [ax_R1D, ax_Z1D]:
+    for ax in [ax_r1d, ax_z1d]:
         ax.grid()
         ax.set_yscale("log")
         ax.set_ylabel(r"$\nu_{*}$")
         ax.set_xlim(-20, 20)
 
     z_samp = [0, 1, 2, 3, 4]
-    cim = ax_Z1D.scatter(
+    cim = ax_z1d.scatter(
         np.ones(len(z_samp)) * -25,
         np.ones(len(z_samp)),
         c=z_samp,
@@ -901,25 +910,25 @@ def plot_model_from_params_EX(
     )
     for z in z_samp:
         i = np.where(r_coords >= z)[0][0]
-        ax_R1D.plot(
+        ax_r1d.plot(
             r_coords,
             massdens[i],
             # c=np.log10(massdens[i]),label='r={}'.format(r_coords[i]))
             c="k",
             lw=6,
         )
-        ax_R1D.plot(
+        ax_r1d.plot(
             r_coords,
             massdens[i],
             # c=np.log10(massdens[i]),label='r={}'.format(r_coords[i]))
             c=mpl.cm.binary(z / np.max(z_samp)),
             lw=4,
         )
-        # ax_R1D.text(0,massdens[i][int(len(r_coords)/2)], 'z = {} kpc'.format(int(r_coords[i])),
+        # ax_r1d.text(0,massdens[i][int(len(r_coords)/2)], 'z = {} kpc'.format(int(r_coords[i])),
         #     ha='center', va='bottom')
 
     r_samp = [0, 5, 10, 15, 19.9]
-    cim = ax_Z1D.scatter(
+    cim = ax_z1d.scatter(
         np.ones(len(r_samp)) * -25,
         np.ones(len(r_samp)),
         c=[0, 5, 10, 15, 20],
@@ -934,19 +943,19 @@ def plot_model_from_params_EX(
     )
     for z in r_samp:
         i = np.where(r_coords >= z)[0][0]
-        ax_Z1D.plot(r_coords, massdens.T[i], c="k", lw=6)
-        ax_Z1D.plot(
+        ax_z1d.plot(r_coords, massdens.T[i], c="k", lw=6)
+        ax_z1d.plot(
             r_coords, massdens.T[i], c=mpl.cm.binary(z / np.max(r_samp)), lw=4
         )
         # c=np.log10(massdens.T[i]),label='z={}'.format(r_coords[i]))
-        # ax_Z1D.text(0,massdens.T[i][int(len(r_coords)/2)], 'r = {} kpc'.format(int(r_coords[i])),
+        # ax_z1d.text(0,massdens.T[i][int(len(r_coords)/2)], 'r = {} kpc'.format(int(r_coords[i])),
         #     ha='center', va='bottom')
 
-    ax_Z1D.set_xlabel("z (kpc)")
-    ax_R1D.set_xlabel("r (kpc)")
+    ax_z1d.set_xlabel("z (kpc)")
+    ax_r1d.set_xlabel("r (kpc)")
 
-    ax_R2D.text(3, -18, "z = 0 kpc", color="w")
-    ax_Z2D.text(3, -18, "y = 0 kpc", color="w")
+    ax_r2d.text(3, -18, "z = 0 kpc", color="w")
+    ax_z2d.text(3, -18, "y = 0 kpc", color="w")
 
     paramstring = r"$h_{r, in}$ = " + str(round(1 / params[0], 1)) + " kpc \n"
     paramstring += (
@@ -971,19 +980,21 @@ def plot_model_from_params_EX(
     paramstring += (
         r"log($\nu_{*,\odot}$) = " + str(round(params[5], 1)) + "\n"
     )  # + r' kpc$^{-3}$ '
-    txt1 = ax0.text(
+    ax0.text(
         0, -20, paramstring, color="w", fontsize=48, verticalalignment="bottom"
     )
 
     if annotate:
-        ax_R1D.text(1, 10**3, r"$h_{r, in}^{-1}$", rotation=-20, fontsize=30)
-        ax_R1D.text(12, 10**0, r"$h_{r, out}^{-1}$", rotation=-45, fontsize=30)
+        ax_r1d.text(1, 10**2.5, r"$h_{r, in}^{-1}$", rotation=-20, fontsize=30)
+        ax_r1d.text(
+            12, 10**-1, r"$h_{r, out}^{-1}$", rotation=-45, fontsize=30
+        )
 
-        ax_R1D.set_ylim(10**-12, 10**5)
+        ax_r1d.set_ylim(10**-12, 10**5)
         for h in [50, 100, 500]:
-            ax_R1D.scatter(10, h, c="k", marker="|", s=200, lw=3)
-        ax_R1D.scatter(10, 20, c="k", marker="v", s=100)
-        ax_R1D.text(
+            ax_r1d.scatter(10, h, c="k", marker="|", s=200, lw=3)
+        ax_r1d.scatter(10, 20, c="k", marker="v", s=100)
+        ax_r1d.text(
             9,
             10**3,
             r"$r_{break}$",
@@ -992,15 +1003,15 @@ def plot_model_from_params_EX(
             fontsize=30,
         )
 
-        ax_Z1D.text(
-            5, 10**-10, r"$h_{z}^{-1}(r=20)$", rotation=-50, fontsize=30
+        ax_z1d.text(
+            7, 10**-22, r"$h_{z}^{-1}(r=20)$", rotation=-50, fontsize=30
         )
-        ax_Z1D.text(
-            0, 10**-20, r"$h_{z}^{-1}(r=0)$", rotation=-75, fontsize=30
+        ax_z1d.text(
+            -1, 10**-20, r"$h_{z}^{-1}(r=0)$", rotation=-75, fontsize=30
         )
-        ax_Z1D.set_ylim(10**-40, 10**5)
+        ax_z1d.set_ylim(10**-40, 10**5)
 
-    # ax_Z1D.text(0,10**6, '$h_{z}(R) = h_{z\odot} + A_{flare}(R-R_{\odot})$', fontsize=22,
+    # ax_z1d.text(0,10**6, '$h_{z}(R) = h_{z\odot} + A_{flare}(R-R_{\odot})$', fontsize=22,
     #            horizontalalignment='center')
     if not bin_title == None:
         ax0.text(
@@ -1017,14 +1028,14 @@ def plot_model_from_params_EX(
         )
 
     plt.tight_layout()
-    if savename != None:
+    if savename:
         plt.savefig(savename, bbox_inches="tight")
 
     plt.show()
     return
 
 
-def plot_spiral_arms(ax, rotate):
+def plot_spiral_arms(ax: Axes, rotate: float) -> None:
     # SPIRAL ARMS
     # https://iopscience.iop.org/article/10.3847/1538-4357/ab4a11/pdf
     perseus = [-23, 115, 40, 8.87, 10.3, 8.7, "green", "Perseus", 2, 5.25]
@@ -1073,7 +1084,7 @@ def plot_spiral_arms(ax, rotate):
         return
 
 
-def setup_bin_axes():
+def setup_bin_axes() -> None:
     plt.figure(figsize=(25, 17))
     ax1c = plt.subplot2grid((6, 2), (0, 0), colspan=2)  # cax
     ax1a = plt.subplot2grid((6, 2), (1, 0), rowspan=5)  # high alph
