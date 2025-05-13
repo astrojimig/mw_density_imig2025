@@ -26,7 +26,7 @@ class MaStarSSPs:
         """Initate class instance and load in file"""
         print("Loading in MaStar SSP Spectra")
         print("=" * 50)
-        self.filename = "data/ssps/.2.fits"
+        self.filename = "data/ssps/MaStar_SSP_v0.2.fits"
         self.filepath = os.path.join(PKG_ROOT, self.filename)
         mastar_ssps = fits.open(self.filepath)
         self.ages = mastar_ssps[1].data.T[0][0][0]  # in Gyr
@@ -83,13 +83,16 @@ class MaStarSSPs:
         for i_a, age in enumerate(age_bins):
             # Loop over metalicity bins
             for i_f, feh in enumerate(mh_bins):
-                ssp_flux[i_a, i_f] = np.nansum(self.get_ssp(age, feh))
-
-            # extrapolate to get missing top row!
-            pf = np.polyfit(mh_bins[:-1], ssp_flux[i_a][:-1], 3)
+                if feh <= np.max(self.fehs):
+                    ssp_flux[i_f, i_a] = np.nansum(self.get_ssp(age, feh))
+                else:
+                    ssp_flux[i_f, i_a] = 0
+            # extrapolate to get missing top row
+            # The grid does not go metal rich enough
+            pf = np.polyfit(mh_bins[:-1], ssp_flux[:-1, i_a], 3)
             x1 = mh_bins[-1]
             y1 = x1**3 * pf[0] + x1**2 * pf[1] + x1 * pf[2] + pf[3]
-            ssp_flux[i_a][-1] = y1
+            ssp_flux[-1][i_a] = y1
 
         return ssp_flux
 
@@ -150,7 +153,9 @@ def measure_gr_color(spec_wls: NDArray, spec_flux: NDArray) -> float:
     # https://www.sdss.org/dr12/algorithms/ugrizvegasun/
     # 3631 Jy: this is constant in NU not wl
     # f_nu = 3631 * np.ones(len(spec_wls))
-    flux_ab = 3631 * np.ones(len(spec_wls)) * ((3e8) / (spec_wls * 1e-10))
+    flux_ab = (
+        3631.0 * np.ones(len(spec_wls)) * ((3.0e8) / (spec_wls * 1.0e-10))
+    )
     ref_mags = {}
     # for i, s in enumerate(["u", "g", "r", "i", "z"]):
     for i, s in enumerate(["g", "r"]):
