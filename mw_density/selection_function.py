@@ -68,7 +68,7 @@ class SelectionFunction:
             # print(test)
             if test >= 0.5 * (
                 len(effsel[i].flatten())
-            ):  # more than 90% of effsel is good
+            ):  # more than 50% of effsel is finite
                 goodbins += 1
 
         print(f"{goodbins}/{len(effsel)} good bins in selection function")
@@ -110,7 +110,7 @@ class SelectionFunction:
             # print(test)
             if test >= 0.5 * (
                 len(effsel[i].flatten())
-            ):  # more than 90% of effsel is finite
+            ):  # more than 50% of effsel is finite
                 goodbins += 1
 
         print(f"{goodbins}/{len(effsel)} good bins in selection function")
