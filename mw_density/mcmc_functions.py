@@ -14,7 +14,6 @@ from multiprocessing import Pool, cpu_count
 from numpy.typing import NDArray
 from typing import Any, Callable, Union
 from astropy.io import fits
-from numba import jit
 
 
 def set_param_limits() -> NDArray:
@@ -65,7 +64,8 @@ def mcmc_config() -> tuple[int, int, int]:
     # Number of Walkers
     nwalkers = 100
     # Burn-in period
-    burn_in = 500
+    # burn_in = 500
+    burn_in = 1000
     # Number of iterations after burn-in
     niter = 1000
     return nwalkers, burn_in, niter
@@ -341,6 +341,7 @@ def perform_maap_density_fit(
             pos, prob, state = sampler.run_mcmc(pos, niter, progress=True)
 
         # Save out the final results
+        print(f"Saving to '{fname}'")
         np.savez(
             fname,
             chain=sampler.flatchain,

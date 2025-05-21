@@ -13,7 +13,7 @@ import matplotlib as mpl
 import matplotlib.patches as patches
 import numpy as np
 from mw_density.sample_selection import setup_maap_bins
-from typing import Callable
+from typing import Callable, Tuple
 from numpy.typing import NDArray
 from matplotlib.axes import Axes
 
@@ -21,11 +21,11 @@ age_bins, mh_bins = setup_maap_bins()
 
 
 def plot_sun_and_gc(
+    ax: Axes,
     size: float = 1,
     r_sun: float = -8.122,
     add_bar: bool = False,
     labels: bool = True,
-    ax: Axes = plt.subplot(),
 ) -> None:
     """Marks the sun and the GC on a plot"""
     # Plot GC
@@ -249,7 +249,7 @@ def bin_count_plot(
         )
     )
     plt.imshow(
-        ncount_distmass_low.T,
+        lowalph.T,
         aspect=10,
         origin="lower",
         extent=(
@@ -297,7 +297,7 @@ def bin_count_plot(
         )
     )
     plt.imshow(
-        ncount_distmass_high.T,
+        highalph.T,
         aspect=10,
         origin="lower",
         extent=(
@@ -394,10 +394,10 @@ def bin_count_plot_histo(
         aspect=10,
         origin="lower",
         extent=(
-            age_bins["min"][0],
-            age_bins["max"][-1],
-            mh_bins["min"][0],
-            mh_bins["max"][-1],
+            float(age_bins["min"][0]),
+            float(age_bins["max"][-1]),
+            float(mh_bins["min"][0]),
+            float(mh_bins["max"][-1]),
         ),
         cmap=LinearSegmentedColormap.from_list(
             "", ["white", "tab:red", "darkred"]
@@ -478,9 +478,9 @@ def bin_count_plot_histo(
     for ax in [ax1, ax4]:
         ax.set_ylim(0, histlim1)
         tick_values = np.arange(0, histlim1 + 1000, 5000)
-        tick_value_labels = [int(ii) for ii in tick_values / 1000]
-        tick_value_labels[0] = ""
         ax.set_yticks(tick_values)
+        # ignore first tick to avoid axis overlap
+        tick_value_labels = [""] + [str(ii / 1000) for ii in tick_values[1:]]
         ax.set_yticklabels(tick_value_labels)
         ax.set_xlim(age_bins["min"][0], age_bins["max"][-1])
         ax.set_xticks(fakeages)
@@ -491,8 +491,8 @@ def bin_count_plot_histo(
     for ax in [ax3, ax6]:
         ax.set_xlim(0, histlim2)
         tick_values = np.arange(0, histlim2 + 1000, 5000)
-        tick_value_labels = [int(ii) for ii in tick_values / 1000]
-        tick_value_labels[0] = ""
+        # ignore first tick to avoid axis overlap
+        tick_value_labels = [""] + [str(ii / 1000) for ii in tick_values[1:]]
         ax.set_xticks(tick_values)
         ax.set_xticklabels(tick_value_labels)
         ax.set_ylim(mh_bins["min"][0], mh_bins["max"][-1])
@@ -614,12 +614,12 @@ def bin_count_plot_histo_old(
         lowalph.T,
         aspect=10,
         origin="lower",
-        extent=[
-            age_bins["min"][0],
-            age_bins["max"][-1],
-            mh_bins["min"][0],
-            mh_bins["max"][-1],
-        ],
+        extent=(
+            float(age_bins["min"][0]),
+            float(age_bins["max"][-1]),
+            float(mh_bins["min"][0]),
+            float(mh_bins["max"][-1]),
+        ),
         cmap=LinearSegmentedColormap.from_list(
             "", ["white", "tab:blue", "darkblue"]
         ),
@@ -631,12 +631,12 @@ def bin_count_plot_histo_old(
         highalph.T,
         aspect=10,
         origin="lower",
-        extent=[
-            age_bins["min"][0],
-            age_bins["max"][-1],
-            mh_bins["min"][0],
-            mh_bins["max"][-1],
-        ],
+        extent=(
+            float(age_bins["min"][0]),
+            float(age_bins["max"][-1]),
+            float(mh_bins["min"][0]),
+            float(mh_bins["max"][-1]),
+        ),
         cmap=LinearSegmentedColormap.from_list(
             "", ["white", "tab:red", "darkred"]
         ),
@@ -710,8 +710,8 @@ def bin_count_plot_histo_old(
     for ax in [ax1, ax4]:
         ax.set_ylim(0, histlim1)
         tick_values = np.arange(0, histlim1 + 1000, 5000)
-        tick_value_labels = [int(ii) for ii in tick_values / 1000]
-        tick_value_labels[0] = ""
+        # ignore first tick to avoid axis overlap
+        tick_value_labels = [""] + [str(ii / 1000) for ii in tick_values[1:]]
         ax.set_yticks(tick_values)
         ax.set_yticklabels(tick_value_labels)
 
@@ -799,7 +799,9 @@ def plot_model_from_params_ex(
     ax0 = plt.subplot2grid(
         aspect_size, (0, 0), colspan=aspect_size[0] + 1, rowspan=aspect_size[0]
     )  # full pix
-    # ax0_cax = plt.subplot2grid(aspect_size, (0, aspect_size[0]), colspan=1, rowspan=aspect_size[0])
+    # ax0_cax = plt.subplot2grid(
+    #     aspect_size, (0, aspect_size[0]), colspan=1, rowspan=aspect_size[0]
+    # )
 
     ax_r2d = plt.subplot2grid(
         aspect_size, (0, aspect_size[0] + 1), colspan=sm_size, rowspan=sm_size
@@ -824,13 +826,13 @@ def plot_model_from_params_ex(
         rowspan=sm_size,
     )  # 1D Z
 
-    ax_Rc = plt.subplot2grid(
+    ax_rc = plt.subplot2grid(
         aspect_size,
         (aspect_size[0] - 1, aspect_size[0] + 1),
         rowspan=1,
         colspan=sm_size,
     )  # 1D R#
-    ax_Zc = plt.subplot2grid(
+    ax_zc = plt.subplot2grid(
         aspect_size,
         (aspect_size[0] - 1, aspect_size[0] + sm_size + 1),
         colspan=sm_size,
@@ -903,7 +905,7 @@ def plot_model_from_params_ex(
     )
     plt.colorbar(
         cim,
-        cax=ax_Rc,
+        cax=ax_rc,
         label=r"z (kpc)",
         orientation="horizontal",
         ticks=z_samp,
@@ -924,8 +926,13 @@ def plot_model_from_params_ex(
             c=mpl.cm.binary(z / np.max(z_samp)),
             lw=4,
         )
-        # ax_r1d.text(0,massdens[i][int(len(r_coords)/2)], 'z = {} kpc'.format(int(r_coords[i])),
-        #     ha='center', va='bottom')
+        # ax_r1d.text(
+        #     0,
+        #     massdens[i][int(len(r_coords) / 2)],
+        #     "z = {} kpc".format(int(r_coords[i])),
+        #     ha="center",
+        #     va="bottom",
+        # )
 
     r_samp = [0, 5, 10, 15, 19.9]
     cim = ax_z1d.scatter(
@@ -936,7 +943,7 @@ def plot_model_from_params_ex(
     )
     plt.colorbar(
         cim,
-        cax=ax_Zc,
+        cax=ax_zc,
         label=r"r (kpc)",
         orientation="horizontal",
         ticks=[0, 5, 10, 15, 20],
@@ -948,8 +955,13 @@ def plot_model_from_params_ex(
             r_coords, massdens.T[i], c=mpl.cm.binary(z / np.max(r_samp)), lw=4
         )
         # c=np.log10(massdens.T[i]),label='z={}'.format(r_coords[i]))
-        # ax_z1d.text(0,massdens.T[i][int(len(r_coords)/2)], 'r = {} kpc'.format(int(r_coords[i])),
-        #     ha='center', va='bottom')
+        # ax_z1d.text(
+        #     0,
+        #     massdens.T[i][int(len(r_coords) / 2)],
+        #     "r = {} kpc".format(int(r_coords[i])),
+        #     ha="center",
+        #     va="bottom",
+        # )
 
     ax_z1d.set_xlabel("z (kpc)")
     ax_r1d.set_xlabel("r (kpc)")
@@ -963,15 +975,15 @@ def plot_model_from_params_ex(
     )
     paramstring += r"$r_{break}$ = " + str(round(params[3], 1)) + " kpc \n"
 
-    txt1 = ax0.text(
+    ax0.text(
         -18,
         -20,
         paramstring,
         color="w",
         fontsize=48,
         verticalalignment="bottom",
+        # path_effects = [patheffects.withStroke(linewidth=2, foreground='k')]
     )
-    # txt1.set_path_effects([patheffects.withStroke(linewidth=2, foreground='k')])
 
     paramstring = (
         r"$h_{z}(R_{\odot})$ = " + str(round(params[2], 1)) + " kpc \n"
@@ -1011,9 +1023,14 @@ def plot_model_from_params_ex(
         )
         ax_z1d.set_ylim(10**-40, 10**5)
 
-    # ax_z1d.text(0,10**6, '$h_{z}(R) = h_{z\odot} + A_{flare}(R-R_{\odot})$', fontsize=22,
-    #            horizontalalignment='center')
-    if not bin_title == None:
+    # ax_z1d.text(
+    #     0,
+    #     10**6,
+    #     "$h_{z}(R) = h_{z\odot} + A_{flare}(R-R_{\odot})$",
+    #     fontsize=22,
+    #     horizontalalignment="center",
+    # )
+    if bin_title:
         ax0.text(
             -18, 18, bin_title, color="w", fontsize=48, verticalalignment="top"
         )
@@ -1084,7 +1101,7 @@ def plot_spiral_arms(ax: Axes, rotate: float) -> None:
         return
 
 
-def setup_bin_axes() -> None:
+def setup_bin_axes() -> Tuple[Axes]:
     plt.figure(figsize=(25, 17))
     ax1c = plt.subplot2grid((6, 2), (0, 0), colspan=2)  # cax
     ax1a = plt.subplot2grid((6, 2), (1, 0), rowspan=5)  # high alph
