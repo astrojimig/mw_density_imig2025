@@ -219,6 +219,9 @@ def perform_maap_density_fit(
     """
     Function to perform the MCMC density fit for a give MAAP bin.
 
+    Based on this:
+    https://prappleizer.github.io/Tutorials/MCMC/MCMC_Tutorial_Solution.html
+
     Parameters:
     -----------
     apogee_sample: table
