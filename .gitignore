@@ -1,0 +1,9 @@
+.ipynb_checkpoints
+.DS_Store
+.vscode/
+
+_build/
+__pycache__/
+*.egg-info/
+
+results/mcmc_chains/
