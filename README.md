@@ -103,8 +103,17 @@ Finally, launch a Jupyter Notebook kernel to view and run the notebooks describe
 jupyter notebook
 ```
 
+# License
+[cc-by]: http://creativecommons.org/licenses/by/4.0/
+
+[![CC BY 4.0][cc-by-shield]][cc-by]
+
+This work is licensed under a
+[Creative Commons Attribution 4.0 International License][cc-by].
+
+[cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
+
 # Citation
-This work is published under a [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) creative commons liscense.
 
 If you use any part of this repository in any published work, please make sure to cite the following papers:
 - [Imig et al. 2025 (submitted)](https://arxiv.org/abs/2507.17629)
