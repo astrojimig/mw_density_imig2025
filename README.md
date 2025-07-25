@@ -1,10 +1,10 @@
 # mw_density_imig2025
 
-This repository contains the results, source code and data used in [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf) for studying the density structure of the Milky Way disk using SDSS-IV APOGEE.
+This repository contains the results, source code and data used in [Imig et al. 2025](https://arxiv.org/abs/2507.17629) for studying the density structure of the Milky Way disk using SDSS-IV APOGEE.
 
 This paper was submitted to ApJ on May 20, 2025 and is currently under review! This repository might get updated more throughout the referee process.
 
-[>>> Read the paper here! <<<](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf)
+[>>> Read the paper here! <<<](https://arxiv.org/abs/2507.17629)
 
 If you have any questions or ideas, please contact the corresponding author: Julie Imig (jimig@stsci.edu)
 
@@ -14,7 +14,7 @@ Scroll down to the [Installation Instructions](#installation-instructions) for g
 
 ## The Jupyter Notebooks
 
-The main code for reproducing the results and figures from [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf) is set up in a series of Jupyter notebooks in this directory. A brief overiew of each of them is provided below:
+The main code for reproducing the results and figures from [Imig et al. 2025](https://arxiv.org/abs/2507.17629) is set up in a series of Jupyter notebooks in this directory. A brief overiew of each of them is provided below:
 
 ### Part 0: Sample Selection
 
@@ -46,14 +46,14 @@ If you're interested in downloading the results of this study in a table format,
 [>>> Download mw_density_params.fits <<<](results/mw_density_params.fits)
 
 ### Results
-The `results/` directory contains the main results and all of the figures for the paper [Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf). 
+The `results/` directory contains the main results and all of the figures for the paper [Imig et al. 2025](https://arxiv.org/abs/2507.17629). 
 
 ### Source Data
 The `data/` directory contains directory contains copies of the ancillary data used in this study. This includes:
 
 - [`isochrones/parsec.dat`](data/isochrones/parsec.dat): a set of [PARSEC isochrones](https://stev.oapd.inaf.it/cgi-bin/cmd) for the age and metallicity limits of the sample ([Bressan et al, 2012](http://dx.doi.org/10.1111/j.1365-2966.2012.21948.x), [Chen et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.444.2525C))
 - [`manga_mwas/`](data/manga_mwas) The sample of Milky Way Analog (MWA) galaxies from the MaNGA survey used in [Boardman et al. 2020](https://doi.org/10.1093%2Fmnras%2Fstaa2731), including selection criteria and combined spectra.
-- [`selfuncs/`]() - the raw selection function for APOGEE DR17 calculated as part of this study ([Imig et al. 2025](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf))
+- [`selfuncs/`]() - the raw selection function for APOGEE DR17 calculated as part of this study ([Imig et al. 2025](https://arxiv.org/abs/2507.17629))
 - [`sloan_filters/filter_curves.fits`](data/sloan_filters/filter_curves.fits): The filter curves for the SDSS *ugriz* filters [(Gunn et al. 1998)](http://adsabs.harvard.edu/abs/1998AJ....116.3040G)
 - [`ssps/`](data/ssps/) : The MaStar Simple Stellar Population models from [Maraston et al. 2020](https://doi.org/10.1093%2Fmnras%2Fstaa1489)
 - [`apogee_sample.fits`]()
@@ -107,7 +107,7 @@ jupyter notebook
 This work is published under a [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) creative commons liscense.
 
 If you use any part of this repository in any published work, please make sure to cite the following papers:
-- [Imig et al. 2025 (submitted)](https://astrojimig.github.io/pdfs/Imig_MW_density.pdf)
+- [Imig et al. 2025 (submitted)](https://arxiv.org/abs/2507.17629)
 
 # Authors
 All the code in this repository was written by:
